@@ -46,7 +46,7 @@ enum class  DataContent {
     GPS_Location_Accuracy = 0x5A
 
 };
-s
+
 using namespace esphome;
 
 void WitmotionComponent::setup() {
