@@ -31,15 +31,15 @@ static const char *TAG = "witmotion";
 
 static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
 
-static const uint8_t ProtocolHeader = 0x55;
+static const uint8_t ProtocolHeader = 0x55U;
 
 enum class  DataContent {
-    Time = 0x50,
-    Acceleration = 0x51,
-    Angular_Velocity = 0x52,
-    Angle = 0x53,
-    Magetic_Field = 0x54,
-    Port = 0x55,
+    Time = 0x50U,
+    Acceleration = 0x51U,
+    Angular_Velocity = 0x52U,
+    Angle = 0x53U,
+    Magetic_Field = 0x54U,
+    Port = 0x55U,
     Barometric_Altitude = 0x56,
     Latitude_Longitude = 0x57,
     Ground_Speed = 0x58,
@@ -79,11 +79,11 @@ void WitmotionComponent::read_from_serial()
    if ( this->stream_->available() > 0 ) {
         char buf[128];
     
-        size_t len = std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buff));
+        size_t len = std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf));
         if (len > 0)
         {
             size_t bytes_read = this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
-            ESP_LOGD(TAG, "Read %d bytes from serial port", (int)(bytes_read));
+            ESP_LOGD(TAG, "Read %d bytes from serial port from up to %d", (int)(bytes_read), (int)len);
             lwrb_write_ex(&this->buff, buf, bytes_read, NULL, LWRB_FLAG_WRITE_ALL);
         }
    }
@@ -96,17 +96,17 @@ void WitmotionComponent::parse()
     while(lwrb_get_full(&this->buff) >= sizeof(wimotion_packet))
     {
         wimotion_packet dat;
-        ESP_LOGD(TAG, "Scanning for %d bytes", (int)(sizeof(wimotion_packet)));
-        lwrb_sz_t ret = lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
-        ESP_LOGD(TAG, "Got  %d bytes, header: 0x%02x, content: 0x%02x, mask: 0x%02x", (int)(ret), dat.header, dat.content, (dat.content & 0x50));
+        ESP_LOGD(TAG, "Scanning for %d bytes (avail %d)", (int)(sizeof(wimotion_packet)), lwrb_get_full(&this->buff));
+        lwrb_sz_t ret = lwrb_peek(&this->buff, 0, &dat,sizeof(wimotion_packet));
+        ESP_LOGD(TAG, "Got  %d bytes, header: 0x%02x, content: 0x%02x, mask: 0x%02x", (int)(ret), dat.header, dat.content, (dat.content & 0x50U));
         if(dat.header != ProtocolHeader)
         {
-            
+
             lwrb_skip(&this->buff,1);
             continue;
         }
 
-        if((dat.content & 0x50) == 0)
+        if((dat.content & 0x50U) == 0)
         {
             lwrb_skip(&this->buff,2);
             continue;
