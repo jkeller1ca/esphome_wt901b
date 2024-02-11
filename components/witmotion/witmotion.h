@@ -19,6 +19,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 
+#define LWRB_DISABLE_ATOMIC 1
 #include "lwrb/lwrb.h"
 
 #include <memory>
