@@ -123,6 +123,10 @@ void WitmotionComponent::parse()
               ESP_LOGD(TAG, "Good Packet, type %d", dat.content);
               lwrb_skip(&this->buff,sizeof(wimotion_packet));
         }
+        else
+        {
+            lwrb_skip(&this->buff,1);
+        }
 
 
     }
