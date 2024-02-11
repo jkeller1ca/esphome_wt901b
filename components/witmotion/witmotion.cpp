@@ -23,6 +23,27 @@
 
 static const char *TAG = "witmotion";
 
+
+/* From: https://wit-motion.gitbook.io/witmotion-sdk/wit-standard-protocol/wit-standard-communication-protocol
+*/
+static const char ProtocolHeader = 0x55;
+
+
+enum class  DataContent {
+    Time = 0x50,
+    Acceleration = 0x51,
+    Angular_Velocity = 0x52,
+    Angle = 0x53,
+    Magetic_Field = 0x54,
+    Port = 0x55,
+    Barometric_Altitude = 0x56,
+    Latitude_Longitude = 0x57,
+    Ground_Speed = 0x58,
+    Quaternion = 0x59,
+    GPS_Location_Accuracy = 0x5A
+
+}
+
 using namespace esphome;
 
 void WitmotionComponent::setup() {
@@ -40,6 +61,50 @@ void WitmotionComponent::read() {
         len = std::min(len, 128);
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
         
+        int i = 0;
+        while ( buf[i] != ProtocolHeader && i<len)
+            ++i;
+
+        if (i==len) continue;
+    
+        switch (buf[i])
+        {
+            case DataContent::Time:
+
+            break;
+            case DataContent::Acceleration:
+                 ESP_LOGCONFIG(TAG, "RX: Acceleration");
+            break;
+            case DataContent::Angular_Velocity:
+
+            break;
+            case DataContent::Angle:
+
+            break;
+            case DataContent::Magetic_Field:
+
+            break;
+            case DataContent::Port:
+             ESP_LOGCONFIG(TAG, "RX: Port");
+
+            break;
+            case DataContent::Barometric_Altitude:
+
+            break;
+            case DataContent::Latitude_Longitude:
+
+            break;
+            case DataContent::Ground_Speed:
+
+            break;
+            case DataContent::Quaternion:
+
+            break;
+            case DataContent::GPS_Location_Accuracy:
+
+            break;
+
+        }
         for(int i=0;i<len;++i)
             ESP_LOGCONFIG(TAG, "RX: 0x%02x",buf[i]);
     }
