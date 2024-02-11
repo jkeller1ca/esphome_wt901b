@@ -41,8 +41,8 @@ public:
 
 	
 protected:
-    void read();
-    void write();
+    void read_from_serial();
+    void parse();
 
     esphome::uart::UARTComponent *stream_{nullptr};
 

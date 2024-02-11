@@ -69,15 +69,22 @@ void WitmotionComponent::setup() {
 
 void WitmotionComponent::loop() {
     this->parse();
-    this->rad_from_serial();
+    this->read_from_serial();
 }
+
+void WitmotionComponent::read_from_serial()
+{
+
+   
+}
+
 
 void WitmotionComponent::parse() {
 
     wimotion_packet dat;
-    ESP_LOGD(TAG, "Scannign for %d bytes", (int)(sizeof(wimotion_packet)));
-    lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
-
+    ESP_LOGD(TAG, "Scanning for %d bytes", (int)(sizeof(wimotion_packet)));
+    lwrb_sz_t ret = lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
+    ESP_LOGD(TAG, "Got  %d bytes", (int)(ret));
 
     }
 
