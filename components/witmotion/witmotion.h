@@ -19,7 +19,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 
-#include "lwrb/lwrb.h"
+#include "lwrb.h"
 
 #include <memory>
 #include <string>
