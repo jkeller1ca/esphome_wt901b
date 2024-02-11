@@ -105,7 +105,6 @@ void WitmotionComponent::read() {
             break;
 
         }
-        for(int i=0;i<len;++i)
-            ESP_LOGCONFIG(TAG, "RX: 0x%02x",buf[i]);
+
     }
 }
