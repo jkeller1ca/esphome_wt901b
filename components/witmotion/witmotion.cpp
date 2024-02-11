@@ -75,7 +75,7 @@ void WitmotionComponent::loop() {
 void WitmotionComponent::read_from_serial()
 {
 
-   if this->stream_->available() > 0) {
+   if ( this->stream_->available() > 0 ) {
         char buf[128];
     
         size_t len = std::min(lwrb_get_free(&this->buff), sizeof(buff));
