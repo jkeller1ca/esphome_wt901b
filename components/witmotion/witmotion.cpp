@@ -21,13 +21,16 @@
 #include "esphome/core/util.h"
 
 
+
 static const char *TAG = "witmotion";
 
 
 /* From: https://wit-motion.gitbook.io/witmotion-sdk/wit-standard-protocol/wit-standard-communication-protocol
 */
-static const char ProtocolHeader = 0x55;
 
+static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
+
+static const unit8_t ProtocolHeader = 0x55;
 
 enum class  DataContent {
     Time = 0x50,
@@ -48,6 +51,7 @@ using namespace esphome;
 
 void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
+
     };
 
 void WitmotionComponent::loop() {
@@ -55,8 +59,20 @@ void WitmotionComponent::loop() {
 }
 
 void WitmotionComponent::read() {
-    int len;
-    while ((len = this->stream_->available()) > 0) {
+    
+        /* Scan and discard until we find the start of message (potentially) */
+        uint8_t som = 0;
+        int discarded = 0;
+        while(this->stream_->peek_byte(&som) && som != ProtocolHeader) {
+            this->stream_->read_byte(&som);
+            discarded ++;
+        }
+
+        ESP_LOGD(TAG,"Discarded: %d", discarded);
+
+        uint8_t dc = 0;
+
+
         char buf[128];
         len = std::min(len, 128);
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);

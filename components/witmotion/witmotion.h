@@ -19,6 +19,8 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 
+#include "../lwrb/lwrb/src/include/lwrb.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,7 +29,8 @@ class WitmotionComponent : public esphome::Component {
 public:
     WitmotionComponent() = default;
     explicit WitmotionComponent(esphome::uart::UARTComponent *stream) : stream_{stream} {}
-    void set_uart_parent(esphome::uart::UARTComponent *parent) { this->stream_ = parent; }
+    void set_uart_parent(esphome::uart::UARTComponent *parent) { this->stream_ = parent;
+    this->stream_->set_rx_buffer_size(128); }
 
     void setup() override;
     void loop() override;
@@ -41,4 +44,5 @@ protected:
     void write();
 
     esphome::uart::UARTComponent *stream_{nullptr};
+
 };
