@@ -36,7 +36,6 @@ public:
 
     float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
-	int get_client_count() { return this->clients_.size(); }
 	
 protected:
     void read();

@@ -25,17 +25,17 @@ static const char *TAG = "witmotion";
 
 using namespace esphome;
 
-void StreamServerComponent::setup() {
+void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
     };
 
 }
 
-void StreamServerComponent::loop() {
+void WitmotionComponent::loop() {
     this->read();
 }
 
-void StreamServerComponent::read() {
+void WitmotionComponent::read() {
     int len;
     while ((len = this->stream_->available()) > 0) {
         char buf[128];
