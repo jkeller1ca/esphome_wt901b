@@ -40,7 +40,7 @@ void WitmotionComponent::read() {
         len = std::min(len, 128);
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
         
-        for(int i=0;i<len;i++)
-            ESP_LOGCONFIG(TAG, "RX: 0x%02x",buf[len]);
+        for(int i=0;i<len;++i)
+            ESP_LOGCONFIG(TAG, "RX: 0x%02x",buf[i]);
     }
 }
