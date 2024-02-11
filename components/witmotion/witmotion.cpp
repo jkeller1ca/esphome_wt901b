@@ -98,16 +98,17 @@ void WitmotionComponent::parse()
         wimotion_packet dat;
         ESP_LOGD(TAG, "Scanning for %d bytes", (int)(sizeof(wimotion_packet)));
         lwrb_sz_t ret = lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
-        ESP_LOGD(TAG, "Got  %d bytes", (int)(ret));
+        ESP_LOGD(TAG, "Got  %d bytes, header: 0x%02x, content: 0x%02x, mask: 0x%02x", (int)(ret), dat.header, dat.content, (dat.content & 0x50));
         if(dat.header != ProtocolHeader)
         {
+            
             lwrb_skip(&this->buff,1);
             continue;
         }
 
         if((dat.content & 0x50) == 0)
         {
-            lwrb_skip(&this->buff,1);
+            lwrb_skip(&this->buff,2);
             continue;
         }
 
