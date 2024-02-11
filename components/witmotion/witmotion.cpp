@@ -27,6 +27,7 @@ static const char *TAG = "witmotion";
 
 /* From: https://wit-motion.gitbook.io/witmotion-sdk/wit-standard-protocol/wit-standard-communication-protocol
 */
+#define member_size(type, member) sizeof(((type *)0)->member)
 
 static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
 
@@ -89,12 +90,39 @@ void WitmotionComponent::read_from_serial()
 }
 
 
-void WitmotionComponent::parse() {
+void WitmotionComponent::parse() 
+{
 
-    wimotion_packet dat;
-    ESP_LOGD(TAG, "Scanning for %d bytes", (int)(sizeof(wimotion_packet)));
-    lwrb_sz_t ret = lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
-    ESP_LOGD(TAG, "Got  %d bytes", (int)(ret));
+    while(lwrb_get_full(&this->buff) >= sizeof(wimotion_packet))
+    {
+        wimotion_packet dat;
+        ESP_LOGD(TAG, "Scanning for %d bytes", (int)(sizeof(wimotion_packet)));
+        lwrb_sz_t ret = lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
+        ESP_LOGD(TAG, "Got  %d bytes", (int)(ret));
+        if(dat.header != ProtocolHeader)
+        {
+            lwrb_skip(&this->buff,1);
+            continue;
+        }
+
+        if((dat.content & 0x50) == 0)
+        {
+            lwrb_skip(&this->buff,1);
+            continue;
+        }
+
+        /* Check CRC */
+        uint8_t crc = dat.header + dat.content;
+        for (int i=0;i< member_size(wimotion_packet,raw), ++i) crc+=dat.raw[i];
+
+        ESP_LOGD(TAG, "CRC Should be: 0x%02x is 0x%02x", dat.crc, crc);
+
+        if (crc == dat.crc)
+        {
+              ESP_LOGD(TAG, "Good Packet, type %d", dat.content);
+              lwrb_skip(&this->buff,sizeof(wimotion_packet));
+        }
+
 
     }
 
