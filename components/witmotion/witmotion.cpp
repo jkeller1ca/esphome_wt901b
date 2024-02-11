@@ -113,7 +113,7 @@ void WitmotionComponent::parse()
 
         /* Check CRC */
         uint8_t crc = dat.header + dat.content;
-        for (int i=0;i< member_size(wimotion_packet,raw), ++i) crc+=dat.raw[i];
+        for (int i=0;i< member_size(wimotion_packet,raw); ++i) crc+=dat.raw[i];
 
         ESP_LOGD(TAG, "CRC Should be: 0x%02x is 0x%02x", dat.crc, crc);
 
