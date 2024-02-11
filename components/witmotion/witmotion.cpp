@@ -29,8 +29,6 @@ void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
     };
 
-}
-
 void WitmotionComponent::loop() {
     this->read();
 }
