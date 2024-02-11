@@ -25,7 +25,7 @@ DEPENDENCIES = ["uart"]
 MULTI_CONF = True
 
 ns = cg.global_ns
-WitmotionComponent = ns.class_("witmotion", cg.Component)
+WitmotionComponent = ns.class_("WitmotionComponent", cg.Component)
 
 CONFIG_SCHEMA = (
 	cv.Schema(
