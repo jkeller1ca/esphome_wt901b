@@ -47,32 +47,36 @@ enum class  DataContent {
 
 };
 
+struct wimotion_packet
+{
+    uint8_t header;
+    uint8_t content;
+    union 
+    {
+        uint8_t raw[8];
+    };
+    uint8_t crc;
+
+} __attribute__((__packed__));
+
 using namespace esphome;
 
 void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
 
-
+    lwrb_init(&buff, buff_data, sizeof(buff_data)); /* Initialize buffer */
     }
 
 void WitmotionComponent::loop() {
-    this->read();
+    this->parse();
+    this->rad_from_serial();
 }
 
-void WitmotionComponent::read() {
-        /* Declare rb instance & raw data */
-    lwrb_t buff;
-    uint8_t buff_data[8];
+void WitmotionComponent::parse() {
 
-    /* Application code ... */
-    lwrb_init(&buff, buff_data, sizeof(buff_data)); /* Initialize buffer */
-
-    /* Write 4 bytes of data */
-    lwrb_write(&buff, "0123", 4);
-
-    /* Print number of bytes in buffer */
-    ESP_LOGCONFIG(TAG,"Bytes in buffer: %d\r\n", (int)lwrb_get_full(&buff));
-
+    wimotion_packet dat;
+    ESP_LOGD(TAG, "Scannign for %d bytes", (int)(sizeof(wimotion_packet)));
+    lwrb_peek(&buff, 0, &dat,sizeof(wimotion_packet));
 
 
     }

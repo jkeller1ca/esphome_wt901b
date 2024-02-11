@@ -46,4 +46,7 @@ protected:
 
     esphome::uart::UARTComponent *stream_{nullptr};
 
+    lwrb_t buff;
+    uint8_t buff_data[5*11];
+
 };
