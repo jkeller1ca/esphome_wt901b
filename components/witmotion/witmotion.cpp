@@ -42,7 +42,7 @@ enum class  DataContent {
     Quaternion = 0x59,
     GPS_Location_Accuracy = 0x5A
 
-}
+};
 
 using namespace esphome;
 
@@ -67,7 +67,7 @@ void WitmotionComponent::read() {
 
         if (i==len) continue;
     
-        switch (buf[i])
+        switch (static_cast<DataContent>(buf[i])))
         {
             case DataContent::Time:
 
