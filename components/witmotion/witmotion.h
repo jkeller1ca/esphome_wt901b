@@ -19,6 +19,9 @@
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 
+#define LWRB_DISABLE_ATOMIC 1
+#include "lwrb/lwrb.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,20 +30,23 @@ class WitmotionComponent : public esphome::Component {
 public:
     WitmotionComponent() = default;
     explicit WitmotionComponent(esphome::uart::UARTComponent *stream) : stream_{stream} {}
-    void set_uart_parent(esphome::uart::UARTComponent *parent) { this->stream_ = parent; }
+    void set_uart_parent(esphome::uart::UARTComponent *parent) { this->stream_ = parent;
+    this->stream_->set_rx_buffer_size(128); }
 
     void setup() override;
     void loop() override;
-    void dump_config() override;
-    void on_shutdown() override;
 
-    float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
-	int get_client_count() { return this->clients_.size(); }
+    float get_setup_priority() const override { return esphome::setup_priority::BUS; }
+
 	
 protected:
-    void read();
-    void write();
+    void read_from_serial();
+    void parse();
 
     esphome::uart::UARTComponent *stream_{nullptr};
+
+    lwrb_t buff;
+    uint8_t buff_data[5*11];
+
 };

@@ -21,28 +21,112 @@
 #include "esphome/core/util.h"
 
 
+
 static const char *TAG = "witmotion";
+
+
+/* From: https://wit-motion.gitbook.io/witmotion-sdk/wit-standard-protocol/wit-standard-communication-protocol
+*/
+#define member_size(type, member) sizeof(((type *)0)->member)
+
+static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
+
+static const uint8_t ProtocolHeader = 0x55U;
+
+enum class  DataContent {
+    Time = 0x50U,
+    Acceleration = 0x51U,
+    Angular_Velocity = 0x52U,
+    Angle = 0x53U,
+    Magetic_Field = 0x54U,
+    Port = 0x55U,
+    Barometric_Altitude = 0x56,
+    Latitude_Longitude = 0x57,
+    Ground_Speed = 0x58,
+    Quaternion = 0x59,
+    GPS_Location_Accuracy = 0x5A
+
+};
+
+struct wimotion_packet
+{
+    uint8_t header;
+    uint8_t content;
+    union 
+    {
+        uint8_t raw[8];
+    };
+    uint8_t crc;
+
+} __attribute__((__packed__));
 
 using namespace esphome;
 
-void StreamServerComponent::setup() {
+void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
-    };
 
+    lwrb_init(&buff, buff_data, sizeof(buff_data)); /* Initialize buffer */
+    }
+
+void WitmotionComponent::loop() {
+    this->parse();
+    this->read_from_serial();
 }
 
-void StreamServerComponent::loop() {
-    this->read();
-}
+void WitmotionComponent::read_from_serial()
+{
 
-void StreamServerComponent::read() {
-    int len;
-    while ((len = this->stream_->available()) > 0) {
-        char buf[128];
-        len = std::min(len, 128);
+    char buf[128];
+
+    size_t len = std::min(std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf)),  (lwrb_sz_t)this->stream_->available());
+    if (len > 0)
+    {
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
-        
-        for(int i=0;i<len;i++)
-            ESP_LOGCONFIG(TAG, "RX: 0x%02x",buf[len]);
+        ESP_LOGD(TAG, "Read %d bytes from serial port", (int)(len));
+        lwrb_write_ex(&this->buff, buf, len, NULL, LWRB_FLAG_WRITE_ALL);
+    }
+
+}
+
+
+void WitmotionComponent::parse() 
+{
+
+    while(lwrb_get_full(&this->buff) >= sizeof(wimotion_packet))
+    {
+        wimotion_packet dat;
+        ESP_LOGD(TAG, "Scanning for %d bytes (avail %d)", (int)(sizeof(wimotion_packet)), lwrb_get_full(&this->buff));
+        lwrb_sz_t ret = lwrb_peek(&this->buff, 0, &dat,sizeof(wimotion_packet));
+        ESP_LOGD(TAG, "Got  %d bytes, header: 0x%02x, content: 0x%02x, mask: 0x%02x", (int)(ret), dat.header, dat.content, (dat.content & 0x50U));
+        if(dat.header != ProtocolHeader)
+        {
+
+            lwrb_skip(&this->buff,1);
+            continue;
+        }
+
+        if((dat.content & 0x50U) == 0)
+        {
+            lwrb_skip(&this->buff,2);
+            continue;
+        }
+
+        /* Check CRC */
+        uint8_t crc = dat.header + dat.content;
+        for (int i=0;i< member_size(wimotion_packet,raw); ++i) crc+=dat.raw[i];
+
+        ESP_LOGD(TAG, "CRC Should be: 0x%02x is 0x%02x", dat.crc, crc);
+
+        if (crc == dat.crc)
+        {
+              ESP_LOGD(TAG, "Good Packet, type %d", dat.content);
+              lwrb_skip(&this->buff,sizeof(wimotion_packet));
+        }
+        else
+        {
+            lwrb_skip(&this->buff,1);
+        }
+
+
     }
 }
