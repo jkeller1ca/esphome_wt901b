@@ -30,7 +30,7 @@ static const char *TAG = "witmotion";
 
 static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
 
-static const unit8_t ProtocolHeader = 0x55;
+static const uint8_t ProtocolHeader = 0x55;
 
 enum class  DataContent {
     Time = 0x50,
@@ -63,7 +63,7 @@ void WitmotionComponent::setup() {
     lwrb_write(&buff, "0123", 4);
 
     /* Print number of bytes in buffer */
-    ESP_LOGCONFIG("Bytes in buffer: %d\r\n", (int)lwrb_get_full(&buff));
+    ESP_LOGCONFIG(TAG,"Bytes in buffer: %d\r\n", (int)lwrb_get_full(&buff));
 
     };
 
@@ -73,67 +73,7 @@ void WitmotionComponent::loop() {
 
 void WitmotionComponent::read() {
     
-        /* Scan and discard until we find the start of message (potentially) */
-        uint8_t som = 0;
-        int discarded = 0;
-        while(this->stream_->peek_byte(&som) && som != ProtocolHeader) {
-            this->stream_->read_byte(&som);
-            discarded ++;
-        }
 
-        ESP_LOGD(TAG,"Discarded: %d", discarded);
-
-        uint8_t dc = 0;
-
-
-        char buf[128];
-        len = std::min(len, 128);
-        this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
-        
-        int i = 0;
-        while ( buf[i] != ProtocolHeader && i<len)
-            ++i;
-
-        if (i==len) continue;
-    
-        switch (static_cast<DataContent>(buf[i+1]))
-        {
-            case DataContent::Time:
-
-            break;
-            case DataContent::Acceleration:
-                 ESP_LOGCONFIG(TAG, "RX: Acceleration");
-            break;
-            case DataContent::Angular_Velocity:
-
-            break;
-            case DataContent::Angle:
-
-            break;
-            case DataContent::Magetic_Field:
-
-            break;
-            case DataContent::Port:
-             ESP_LOGCONFIG(TAG, "RX: Port");
-
-            break;
-            case DataContent::Barometric_Altitude:
-
-            break;
-            case DataContent::Latitude_Longitude:
-
-            break;
-            case DataContent::Ground_Speed:
-
-            break;
-            case DataContent::Quaternion:
-
-            break;
-            case DataContent::GPS_Location_Accuracy:
-
-            break;
-
-        }
 
     }
 }
