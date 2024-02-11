@@ -37,7 +37,7 @@ public:
     void loop() override;
 
 
-    float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
+    float get_setup_priority() const override { return esphome::setup_priority::BUS; }
 
 	
 protected:

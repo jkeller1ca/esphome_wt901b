@@ -52,7 +52,15 @@ using namespace esphome;
 void WitmotionComponent::setup() {
     ESP_LOGCONFIG(TAG, "Setting up witmotion...");
 
-    /* Declare rb instance & raw data */
+
+    }
+
+void WitmotionComponent::loop() {
+    this->read();
+}
+
+void WitmotionComponent::read() {
+        /* Declare rb instance & raw data */
     lwrb_t buff;
     uint8_t buff_data[8];
 
@@ -65,14 +73,6 @@ void WitmotionComponent::setup() {
     /* Print number of bytes in buffer */
     ESP_LOGCONFIG(TAG,"Bytes in buffer: %d\r\n", (int)lwrb_get_full(&buff));
 
-    }
-
-void WitmotionComponent::loop() {
-    this->read();
-}
-
-void WitmotionComponent::read() {
-    
 
 
     }
