@@ -67,7 +67,7 @@ void WitmotionComponent::read() {
 
         if (i==len) continue;
     
-        switch (static_cast<DataContent>(buf[i])))
+        switch (static_cast<DataContent>(buf[i]))
         {
             case DataContent::Time:
 
