@@ -78,7 +78,7 @@ void WitmotionComponent::read_from_serial()
 
     char buf[128];
 
-    size_t len = std::min(std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf)), this->stream_->available());
+    size_t len = std::min(std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf)),  (lwrb_sz_t)this->stream_->available());
     if (len > 0)
     {
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
