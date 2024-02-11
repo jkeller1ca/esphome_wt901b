@@ -76,17 +76,16 @@ void WitmotionComponent::loop() {
 void WitmotionComponent::read_from_serial()
 {
 
-   if ( this->stream_->available() > 0 ) {
-        char buf[128];
-    
-        size_t len = std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf));
-        if (len > 0)
-        {
-            size_t bytes_read = this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
-            ESP_LOGD(TAG, "Read %d bytes from serial port from up to %d", (int)(bytes_read), (int)len);
-            lwrb_write_ex(&this->buff, buf, bytes_read, NULL, LWRB_FLAG_WRITE_ALL);
-        }
-   }
+    char buf[128];
+
+    size_t len = std::min(std::min(lwrb_get_free(&this->buff), (lwrb_sz_t)sizeof(buf)), this->stream_->available());
+    if (len > 0)
+    {
+        this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
+        ESP_LOGD(TAG, "Read %d bytes from serial port", (int)(len));
+        lwrb_write_ex(&this->buff, buf, len, NULL, LWRB_FLAG_WRITE_ALL);
+    }
+
 }
 
 
