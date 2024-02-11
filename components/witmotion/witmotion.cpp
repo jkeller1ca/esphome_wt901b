@@ -65,7 +65,7 @@ void WitmotionComponent::setup() {
     /* Print number of bytes in buffer */
     ESP_LOGCONFIG(TAG,"Bytes in buffer: %d\r\n", (int)lwrb_get_full(&buff));
 
-    }s
+    }
 
 void WitmotionComponent::loop() {
     this->read();
