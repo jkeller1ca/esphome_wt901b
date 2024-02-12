@@ -29,8 +29,6 @@ static const char *TAG = "witmotion";
 */
 #define member_size(type, member) sizeof(((type *)0)->member)
 
-static const size_t BUFFER_SIZE = 2 * 11;  /* Size of 2 WiMotion Messages */
-
 static const uint8_t ProtocolHeader = 0x55U;
 
 enum class  DataContent {
@@ -55,6 +53,27 @@ struct wimotion_packet
     union 
     {
         uint8_t raw[8];
+        int16_t as_int16[4];
+        struct 
+        {
+            int16_t Ax;
+            int16_t Ay;
+            int16_t Az;
+            int16_t temperature;
+        } acceleration;
+        struct 
+        {
+            int16_t roll;
+            int16_t pitch;
+            int16_t yaw;
+            int16_t version;
+        } angle;
+        struct
+        {   
+            uint32_t pressure;
+            uint32_t altitude;
+        } pressure;
+        
     };
     uint8_t crc;
 
@@ -82,22 +101,30 @@ void WitmotionComponent::read_from_serial()
     if (len > 0)
     {
         this->stream_->read_array(reinterpret_cast<uint8_t*>(buf), len);
-        ESP_LOGD(TAG, "Read %d bytes from serial port", (int)(len));
         lwrb_write_ex(&this->buff, buf, len, NULL, LWRB_FLAG_WRITE_ALL);
     }
 
 }
 
+void WitmotionComponent::fix_endian(wimotion_packet * dat)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return;
+#else
+    for(int =0;i<member_size(wimotion_packet,as_int16);++i)
+    {
+        wimotion_packet.as_int16[i]=byteswap(wimotion_packet.as_int16[i]);
+    }
+#endif
+}
 
 void WitmotionComponent::parse() 
 {
-
     while(lwrb_get_full(&this->buff) >= sizeof(wimotion_packet))
     {
         wimotion_packet dat;
-        ESP_LOGD(TAG, "Scanning for %d bytes (avail %d)", (int)(sizeof(wimotion_packet)), lwrb_get_full(&this->buff));
         lwrb_sz_t ret = lwrb_peek(&this->buff, 0, &dat,sizeof(wimotion_packet));
-        ESP_LOGD(TAG, "Got  %d bytes, header: 0x%02x, content: 0x%02x, mask: 0x%02x", (int)(ret), dat.header, dat.content, (dat.content & 0x50U));
+
         if(dat.header != ProtocolHeader)
         {
 
@@ -115,12 +142,45 @@ void WitmotionComponent::parse()
         uint8_t crc = dat.header + dat.content;
         for (int i=0;i< member_size(wimotion_packet,raw); ++i) crc+=dat.raw[i];
 
-        ESP_LOGD(TAG, "CRC Should be: 0x%02x is 0x%02x", dat.crc, crc);
-
         if (crc == dat.crc)
         {
-              ESP_LOGD(TAG, "Good Packet, type %d", dat.content);
+              switch(static_cast<DataContent>(dat.content))
+              {
+                case DataContent::Acceleration:
+                {
+                    fix_endian(&dat);
+                    float temperature = dat.acceleration.temperature /100.0;
+                    ESP_LOGD(TAG, "Acceleration Message: Temperature: %02f", temperature);
+                    if (this->temperature_sensor_ != nullptr)
+                        this->temperature_sensor_->publish_state(temperature);
+                }
+                break;
+                case DataContent::Angle:
+                {
+                    fix_endian(&dat);
+                    float roll = (float)dat.angle.roll / 32768 * 180.0;
+                    float pitch = (float)dat.angle.pitch / 32768 * 180.0;
+                    float yaw = (float)dat.angle.yaw / 32768 * 180.0;
+
+                    if (this->roll_sensor_ != nullptr)
+                        this->roll_sensor_->publish_state(roll);
+                    if (this->pitch_sensor_ != nullptr)
+                        this->pitch_sensor_->publish_state(pitch);
+                    if (this->yaw_sensor_ != nullptr)
+                        this->yaw_sensor_->publish_state(yaw);
+                }
+                break;
+                case DataContent::Barometric_Altitude:
+                {
+                    if (this->barometric_pressure_sensor_ != nullptr)
+                        this->barometric_pressure_sensor_->publish_state(dat.pressure.pressure/100.);
+
+                }
+                break;
+              }
+
               lwrb_skip(&this->buff,sizeof(wimotion_packet));
+              return;
         }
         else
         {
@@ -129,4 +189,10 @@ void WitmotionComponent::parse()
 
 
     }
+
 }
+
+void WitmotionComponent::dump_config() {
+        ESP_LOGCONFIG(TAG, "WITMOTION:");
+        LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
+        }
